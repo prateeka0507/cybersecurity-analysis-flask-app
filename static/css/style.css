@@ -140,6 +140,17 @@ header h1 {
     margin-top: 15px;
 }
 
+.analysis-report.error {
+    background-color: #fff5f5;
+    border: 1px solid #feb2b2;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.analysis-report.error .analysis-content {
+    color: #c53030;
+}
+
 .analysis-section {
     margin-bottom: 15px;
 }
@@ -196,8 +207,11 @@ header h1 {
 
 .code-block {
     background-color: #f8f9fa;
-    padding: 10px;
-    border-radius: 5px;
+    padding: 12px;
+    border-radius: 6px;
     font-family: monospace;
+    font-size: 14px;
     overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
