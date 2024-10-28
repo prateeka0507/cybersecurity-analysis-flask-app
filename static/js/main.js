@@ -19,12 +19,15 @@ function submitQuery(event) {
         },
         body: JSON.stringify({ query: query })
     })
-    .then(response => response.json())
-    .then(data => {
+    .then(async response => {
+        const data = await response.json();
         removeLoadingMessage(loadingId);
         
-        if (data.error) {
-            addMessage('answer', `Error: ${data.error}`);
+        if (!response.ok) {
+            addAnalysisReport({
+                analysis: data.analysis || `Error: ${data.error}`,
+                query_details: data.query_details || {}
+            });
             return;
         }
         
@@ -32,7 +35,10 @@ function submitQuery(event) {
     })
     .catch(error => {
         removeLoadingMessage(loadingId);
-        addMessage('answer', `Error processing query: ${error.message}`);
+        addAnalysisReport({
+            analysis: `Error processing query: ${error.message}`,
+            query_details: {}
+        });
     });
 }
 
