@@ -1,27 +1,69 @@
 from flask import Flask, render_template, request, jsonify
 from openai import OpenAI
 import psycopg2
+from flask_cors import CORS
 from typing import Dict, List, Tuple
 from datetime import datetime
 import numpy as np
 import os
+import json
+import traceback
+from werkzeug.middleware.proxy_fix import ProxyFix
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
+app.wsgi_app = ProxyFix(app.wsgi_app)
 
 # Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 DB_CONN = os.getenv("DATABASE_URL")
 TABLE_NAME = 'sitreps_2024'
 EMBEDDING_MODEL = "text-embedding-ada-002"
+DB_TIMEOUT = 30  # seconds
 
-DEFAULT_SYSTEM_INSTRUCTION = """You are an AI assistant specialized in cybersecurity incident analysis..."""  # Same as original
+# Initialize OpenAI client with timeout
+client = OpenAI(
+    api_key=OPENAI_API_KEY,
+    timeout=60.0  # Increased timeout for OpenAI requests
+)
 
-# Initialize OpenAI client
-client = OpenAI(api_key=OPENAI_API_KEY)
+DEFAULT_SYSTEM_INSTRUCTION = """You are an AI assistant specialized in cybersecurity incident analysis. Your role is to:
+
+1. Analyze cybersecurity incidents and threats
+2. Identify patterns and trends in security events
+3. Provide clear, actionable insights
+4. Explain technical concepts in an understandable way
+5. Maintain confidentiality of sensitive information
+
+When responding:
+- Focus on relevant security aspects
+- Provide context for technical terms
+- Highlight potential risks and impacts
+- Suggest mitigation strategies when applicable
+- Use clear, professional language
+- Structure responses with clear sections
+- Include specific details from the data provided
+- Maintain factual accuracy
+
+Format responses with:
+1. Initial Analysis: Brief overview of the situation
+2. Key Findings: Important details and patterns
+3. Technical Details: Relevant technical information
+4. Recommendations: If applicable
+5. Additional Context: Any other relevant information
+
+Avoid:
+- Speculating beyond available data
+- Sharing sensitive technical details
+- Making definitive predictions
+- Providing specific security configurations
+- Recommending specific products/vendors
+
+Base all responses on the provided data and maintain a professional, security-focused perspective."""
 
 class QueryAnalyzer:
     def analyze_query(self, query: str, available_columns: List[str]) -> Dict:
