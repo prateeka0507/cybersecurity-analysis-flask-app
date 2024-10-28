@@ -1,45 +1,58 @@
-function submitQuery(event) {
+async function submitQuery(event) {
     event.preventDefault();
     const query = document.getElementById('queryInput').value;
     if (!query) return;
 
-    // Clear input
+    // Clear input and add question
     document.getElementById('queryInput').value = '';
-
-    // Add question to chat
     addMessage('question', query);
     
     // Add loading message
     const loadingId = addLoadingMessage();
 
-    fetch('/query', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query: query })
-    })
-    .then(async response => {
-        const data = await response.json();
-        removeLoadingMessage(loadingId);
-        
-        if (!response.ok) {
-            addAnalysisReport({
-                analysis: data.analysis || `Error: ${data.error}`,
-                query_details: data.query_details || {}
-            });
-            return;
-        }
-        
-        addAnalysisReport(data);
-    })
-    .catch(error => {
-        removeLoadingMessage(loadingId);
-        addAnalysisReport({
-            analysis: `Error processing query: ${error.message}`,
-            query_details: {}
+    try {
+        const response = await fetch('/query', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ query: query }),
+            signal: AbortSignal.timeout(30000) // 30 second timeout
         });
-    });
+
+        let data;
+        try {
+            data = await response.json();
+        } catch (parseError) {
+            throw new Error('Invalid response from server. Please try again later.');
+        }
+
+        if (!response.ok) {
+            throw new Error(data.analysis || data.error || 'Server error occurred');
+        }
+
+        addAnalysisReport(data);
+    } catch (error) {
+        let errorMessage;
+        if (error.name === 'TimeoutError') {
+            errorMessage = 'Request timed out. Please try again.';
+        } else if (error.name === 'AbortError') {
+            errorMessage = 'Request was aborted. Please try again.';
+        } else {
+            errorMessage = error.message || 'An unexpected error occurred';
+        }
+
+        addAnalysisReport({
+            analysis: `Error: ${errorMessage}`,
+            query_details: {
+                query_focus: 'Error occurred',
+                specific_data_points: ['Request failed']
+            }
+        });
+    } finally {
+        removeLoadingMessage(loadingId);
+    }
 }
 
 function switchView(view) {
@@ -102,25 +115,44 @@ function addAnalysisReport(data) {
     const reportDiv = document.createElement('div');
     reportDiv.className = 'message answer';
 
-    reportDiv.innerHTML = `
-        <div class="analysis-report">
-            <div class="analysis-section">
-                <div class="analysis-title">Analysis</div>
-                <div class="analysis-content">${formatText(data.analysis)}</div>
-            </div>
-            
-            ${data.query_details ? `
+    let content;
+    if (data.analysis.includes('Error:')) {
+        content = `
+            <div class="analysis-report error">
                 <div class="analysis-section">
-                    <div class="analysis-title">Focus Areas</div>
-                    <div class="analysis-content">
-                        <strong>Query Focus:</strong> ${data.query_details.query_focus}<br>
-                        <strong>Relevant Data Points:</strong> ${data.query_details.specific_data_points.join(', ')}
-                    </div>
+                    <div class="analysis-content">${formatText(data.analysis)}</div>
                 </div>
-            ` : ''}
-        </div>
-    `;
+            </div>
+        `;
+    } else {
+        content = `
+            <div class="analysis-report">
+                <div class="analysis-section">
+                    <div class="analysis-title">Analysis</div>
+                    <div class="analysis-content">${formatText(data.analysis)}</div>
+                </div>
+                
+                ${data.query_details ? `
+                    <div class="analysis-section">
+                        <div class="analysis-title">Focus Areas</div>
+                        <div class="analysis-content">
+                            <strong>Query Focus:</strong> ${data.query_details.query_focus}<br>
+                            <strong>Relevant Data Points:</strong> ${data.query_details.specific_data_points.join(', ')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${data.raw_data ? `
+                    <div class="analysis-section">
+                        <div class="analysis-title">Raw Data</div>
+                        <pre class="code-block">${JSON.stringify(data.raw_data, null, 2)}</pre>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
 
+    reportDiv.innerHTML = content;
     chatContainer.appendChild(reportDiv);
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
