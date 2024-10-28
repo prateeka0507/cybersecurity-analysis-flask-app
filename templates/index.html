@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cybersecurity Query System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Cybersecurity Query System</h1>
+        </header>
+
+        <main id="mainContent">
+            <div id="chatContainer" class="chat-container">
+                <!-- Messages will be added here dynamically -->
+            </div>
+        </main>
+
+        <div class="question-container">
+            <form class="question-form" onsubmit="submitQuery(event)">
+                <input type="text" id="queryInput" class="question-input" placeholder="Type your question here...">
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
