@@ -173,13 +173,20 @@ def index():
 
 @app.route('/query', methods=['POST'])
 def handle_query():
-    query = request.json.get('query')
-    if not query:
-        return jsonify({'error': 'No query provided'}), 400
+    try:
+        query = request.json.get('query')
+        if not query:
+            return jsonify({'error': 'No query provided'}), 400
 
-    results, analysis = process_query(query, TABLE_NAME)
-    
-    if results:
+        results, analysis = process_query(query, TABLE_NAME)
+        
+        if not results:
+            return jsonify({
+                'error': 'No results found',
+                'analysis': 'Unable to find relevant data for your query.',
+                'query_details': analysis
+            }), 404
+            
         formatted_data = f"""
         Query: {query}
         Analysis Focus: {analysis['query_focus']}
@@ -192,10 +199,13 @@ def handle_query():
             'raw_data': results,
             'query_details': analysis
         })
-    else:
+        
+    except Exception as e:
         return jsonify({
-            'error': 'No results found'
-        }), 404
+            'error': str(e),
+            'analysis': 'An error occurred while processing your query.',
+            'query_details': {}
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
