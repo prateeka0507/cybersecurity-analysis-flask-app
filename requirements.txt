@@ -6,3 +6,5 @@ numpy
 Werkzeug
 typing-extensions
 flask-cors
+flask-session
+gunicorn
