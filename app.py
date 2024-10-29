@@ -15,7 +15,7 @@ app = Flask(__name__)
 # Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 DB_CONN = os.getenv("DATABASE_URL")
-TABLE_NAME = 'sitrep_2024'
+TABLE_NAME = 'sitreps_2024'
 EMBEDDING_MODEL = "text-embedding-ada-002"
 
 DEFAULT_SYSTEM_INSTRUCTION = """You are an AI assistant specialized in cybersecurity incident analysis..."""  # Same as original
