@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cybersecurity Query System</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
@@ -13,21 +12,40 @@
             <h1>Cybersecurity Query System</h1>
         </header>
 
-        <main id="mainContent">
-            <div id="chatContainer" class="chat-container">
-                <!-- Messages will be added here dynamically -->
+        <main>
+            <div class="query-section">
+                <input type="text" id="queryInput" placeholder="Enter your cybersecurity query here...">
+                <button onclick="submitQuery()">Submit Query</button>
+            </div>
+
+            <div class="loading" id="loadingSpinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Processing your query...</p>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-button active" onclick="showTab('analysis')">Analysis</button>
+                <button class="tab-button" onclick="showTab('rawData')">Raw Data</button>
+                <button class="tab-button" onclick="showTab('queryDetails')">Query Details</button>
+            </div>
+
+            <div id="analysisTab" class="tab-content active">
+                <h2>Analysis</h2>
+                <div id="analysisContent"></div>
+            </div>
+
+            <div id="rawDataTab" class="tab-content">
+                <h2>Retrieved Records</h2>
+                <pre id="rawDataContent"></pre>
+            </div>
+
+            <div id="queryDetailsTab" class="tab-content">
+                <h2>Query Details</h2>
+                <pre id="queryDetailsContent"></pre>
             </div>
         </main>
-
-        <div class="question-container">
-            <form class="question-form" onsubmit="submitQuery(event)">
-                <input type="text" id="queryInput" class="question-input" placeholder="Type your question here...">
-                <button type="submit" class="submit-btn">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </form>
-        </div>
     </div>
+
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
