@@ -120,3 +120,40 @@ pre {
     border-radius: 4px;
     overflow-x: auto;
 }
+
+.section-title {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #333;
+    font-size: 1.1em;
+}
+
+.section-title strong {
+    color: #000;
+}
+
+.section-content {
+    margin-left: 20px;
+    margin-bottom: 15px;
+    line-height: 1.5;
+    color: #444;
+}
+
+#analysisContent {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#analysisContent strong {
+    display: inline-block;
+    margin-bottom: 10px;
+    color: #000;
+    font-size: 1.1em;
+}
+
+#analysisContent p {
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
