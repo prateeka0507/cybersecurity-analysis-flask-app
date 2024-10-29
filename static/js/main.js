@@ -1,63 +1,68 @@
-function submitQuery() {
-    const query = document.getElementById('queryInput').value;
-    if (!query) return;
+// Add event listener when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const queryInput = document.getElementById('queryInput');
+    
+    // Listen for Enter key press
+    queryInput.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // Prevent default form submission
+            submitQuery();
+        }
+    });
+});
+
+function formatAnalysisResponse(response) {
+    // First, format text between asterisks
+    let formattedText = response.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Then, format text after ###
+    formattedText = formattedText.replace(/###\s*(.*?)(?=\n|$)/g, '<strong>$1</strong>');
+    
+    // Split into paragraphs and maintain line breaks
+    const paragraphs = formattedText.split('\n').filter(line => line.trim() !== '');
+    
+    // Join paragraphs with proper spacing
+    return paragraphs.map(p => `<p>${p}</p>`).join('');
+}
+
+async function submitQuery() {
+    const queryInput = document.getElementById('queryInput');
+    const query = queryInput.value.trim();
+    
+    if (!query) {
+        alert('Please enter a query');
+        return;
+    }
 
     // Show loading spinner
     document.getElementById('loadingSpinner').style.display = 'block';
+    // Hide previous results if any
+    document.getElementById('analysisTab').style.display = 'none';
 
-    // Clear previous results
-    document.getElementById('analysisContent').innerHTML = '';
-    document.getElementById('rawDataContent').innerHTML = '';
-    document.getElementById('queryDetailsContent').innerHTML = '';
+    try {
+        const response = await fetch('/query', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ query: query })
+        });
 
-    fetch('/query', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query: query })
-    })
-    .then(response => response.json())
-    .then(data => {
+        const data = await response.json();
+
         // Hide loading spinner
         document.getElementById('loadingSpinner').style.display = 'none';
 
-        if (data.error) {
-            alert(data.error);
-            return;
-        }
+        // Format the response
+        const formattedResponse = formatAnalysisResponse(data.analysis);
 
-        // Update content
-        document.getElementById('analysisContent').innerHTML = data.analysis;
-        document.getElementById('rawDataContent').innerHTML = 
-            JSON.stringify(data.raw_data, null, 2);
-        document.getElementById('queryDetailsContent').innerHTML = 
-            JSON.stringify(data.query_details, null, 2);
+        // Show and update analysis content
+        document.getElementById('analysisTab').style.display = 'block';
+        document.getElementById('analysisContent').innerHTML = formattedResponse;
 
-        // Show analysis tab by default
-        showTab('analysis');
-    })
-    .catch(error => {
+    } catch (error) {
+        console.error('Error:', error);
         document.getElementById('loadingSpinner').style.display = 'none';
-        alert('Error processing query: ' + error.message);
-    });
-}
-
-function showTab(tabName) {
-    // Hide all tab content
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-    });
-
-    // Remove active class from all tab buttons
-    document.querySelectorAll('.tab-button').forEach(button => {
-        button.classList.remove('active');
-    });
-
-    // Show selected tab content
-    document.getElementById(tabName + 'Tab').classList.add('active');
-
-    // Add active class to selected tab button
-    document.querySelector(`.tab-button[onclick="showTab('${tabName}')"]`)
-        .classList.add('active');
+        alert('An error occurred while processing your query');
+    }
 }
